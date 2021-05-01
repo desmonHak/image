@@ -29,5 +29,5 @@ int main(){<br>
 
 primero importamos la cabezera. Ya hay una declaracion de la estructura _image llamada como image la variable, mediante esta estructura configuramos los parametros de la imagen.<br>
 imagen.format, esta variable se usa para indicar en la imagen el formato que se usa y la extension que usar para el archivo, si no se asigna por default se usara la extension .ppm.<br>
-Lista de los formatos y estructuras:
+Lista de los formatos y estructuras:<br>
  ![Alt text](https://github.com/desmonHak/image/blob/main/68747470733a2f2f6d656469612e6765656b73666f726765656b732e6f72672f77702d636f6e74656e742f75706c6f6164732f6e657470626d2e706e67?raw=true) 
