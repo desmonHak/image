@@ -182,6 +182,14 @@ const char *concatenacion(const char *texto1, const char *texto2)
     return FinallyText;
 }
 
+void write_buffer_cordenadas(uint32_t x, uint32_t y, uint8_t RED, uint8_t GREN, uint8_t BLUE){
+
+    int cordenada_general =  ((y * image.size_image[1]) + x) * 3;
+    image.data[cordenada_general] = RED;
+    image.data[cordenada_general+1] = GREN;    
+    image.data[cordenada_general+2] = BLUE;
+}
+
 void write_image()
 {
     if (image.format == _P1 || image.format == _P4)
