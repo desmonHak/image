@@ -90,12 +90,6 @@ bool openPGM(PGMImage *pgm, const char *filename)
     ignoreComments(pgmfile);
     fscanf(pgmfile, "%s", pgm->pgmType);
 
-    if (strcmp(pgm->pgmType, "P5"))
-    {
-        fprintf(stderr, "Wrong file type!\n");
-        exit(EXIT_FAILURE);
-    }
-
     ignoreComments(pgmfile);
 
     fscanf(pgmfile, "%d %d", &(pgm->width), &(pgm->height));
@@ -232,7 +226,7 @@ void write_image()
         c++;
     }
     fprintf(pgmimg, "\n");
-    fclose(pgmimg); //*/
+    fclose(pgmimg);
     pgmimg = NULL;
 }
 
