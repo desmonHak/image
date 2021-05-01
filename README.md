@@ -39,7 +39,7 @@ image.number_colors, esta variables permite decir a la imagen el tamano de la pa
 <br>
 image.name, este parametro permite indicar a la cabezera como se llamara la imagen a la hora de crearla.<br>
 <br>
-write_buffer, este funcion de retorno de tipo void permite crear un pixel tomando como primer argumento la cantidad de rojo. como segundo parametro la cantidad de verde. y como tercer parametro la cantidad de azul que contendra el pixel.<br>
+write_buffer, este funcion de retorno de tipo void permite crear un pixel tomando como primer argumento la cantidad de rojo. como segundo parametro la cantidad de verde. y como tercer parametro la cantidad de azul que contendra el pixel. Tras el uso de esta funcion la variable image.name es redefinida con el nombre del archio que se le asigno mas la extension que se le asigno.<br>
 prototipo de la funcion:              void write_buffer(uint8_t RED, uint8_t GREN, uint8_t BLUE);<br>
 <br>
 write_image esta funcion de retorno void es usada para la escritura de la imagen final, tras la asignacion de datos con la funcion write_buffer. write_image usa los datos del buffer para plasmarlo en imagen. lo cual creara de salida la imagen con el nombre asignado en image.name con una de las extensiones dependiendo del tipo de formato que escogio.<br>
