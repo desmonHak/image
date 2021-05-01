@@ -18,7 +18,7 @@ int main()
 
     write_buffer(255, 0, 0);
     write_image();
-    puts("Programa finalizado.\n");
     image_info(image.name);
+    puts("Programa finalizado.\n");
 
 }
