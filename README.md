@@ -9,8 +9,7 @@ gcc -Wall exec.c -o exec.bin<br>
 # Uso en codigo:<br>
 #include "image.h"<br>
 
-int main()<br>
-{<br>
+int main(){<br>
 
     image.format = format_ASCII.P2;<br>
     
