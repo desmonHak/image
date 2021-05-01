@@ -33,7 +33,7 @@ typedef struct _image
     char *name;
     uint32_t size_image[2];
     char* number_colors;
-    RGB *data[];
+    RGB *data[9999*9999];
 } _image;
 
 typedef struct _format_ASCII
@@ -226,7 +226,7 @@ void write_image()
         c++;
     }
     fprintf(pgmimg, "\n");
-    fclose(pgmimg);
+    fclose(pgmimg); //*/
     pgmimg = NULL;
 }
 
