@@ -3,8 +3,8 @@
 int main()
 {
 
-    image.format = format_ASCII.P3;
-    
+    image.format = format_ASCII.P1;
+
     image.size_image[0] = 10;
     image.size_image[1] = 10;
 
@@ -19,5 +19,6 @@ int main()
     write_buffer(255, 0, 0);
     write_image();
     puts("Programa finalizado.\n");
+    image_info(image.name);
 
 }
