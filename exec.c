@@ -1,11 +1,6 @@
 #include "image.h"
 #include <time.h>
 
-int radnom(){
-
-        srand(time(NULL));
-	return rand();
-}
 
 int main()
 {
@@ -20,8 +15,16 @@ int main()
 
     image.name = "output";
 
+
+    srand(time(NULL));
+    unsigned char a, b, c;
+	a =  rand();
+    srand(time(NULL));
+    b = rand();
+    srand(time(NULL));
+    c = rand();
     for(uint64_t i = 0; i <= image.size_image[0]*image.size_image[1]; i++){
-	write_buffer(random()%255-1, random()%255-1,random()%255-1);
+	write_buffer(a%255-1, b%255-1,c%255-1);
     }
 
     //write_buffer(255, 0, 0);
