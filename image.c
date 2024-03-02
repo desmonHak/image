@@ -2,8 +2,6 @@
 #define __IMAGE_C__
 #include "image.h"
 
-#define DEBUG_ENABLE
-
 void __attribute__((constructor)) __init_dfafad__()
 {
     srand(time(NULL));
@@ -13,12 +11,17 @@ void __attribute__((destructor)) __end_dfafad__()
 
 }
 
+int number_cals=0;
 static RGB generate_pixel_rand(void)
 {
 #ifdef DEBUG_ENABLE
+number_cals++;
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
                 INIT_TYPE_FUNC_DBG(RGB, generate_pixel_rand)
-                        END_TYPE_FUNC_DBG);
+                TYPE_DATA_DBG(number_calls, "[] = %p")
+                        END_TYPE_FUNC_DBG, number_cals);
+                        
+                
 #endif
     
     return (RGB){.r = rand(), .g = rand(), .b = rand()};
@@ -74,7 +77,7 @@ bool openPGM(PGMImage *pgm, const char *filename)
     fscanf(pgmfile, "%u", &(pgm->maxValue));
     // buscar resto de datos de la imagen
     ignoreComments(pgmfile);
-    pgm->data = malloc(pgm->height * sizeof(unsigned char *));
+    debug_malloc(unsigned char *, pgm->data, pgm->height * sizeof(unsigned char *));
 
     if (pgm->pgmType[1] == '5')
     {
@@ -84,7 +87,7 @@ bool openPGM(PGMImage *pgm, const char *filename)
         for (int i = 0;
              i < pgm->height; i++)
         {
-            pgm->data[i] = malloc(pgm->width * sizeof(unsigned char));
+            debug_malloc(unsigned char , pgm->data[i], pgm->width * sizeof(unsigned char));
 
             if (pgm->data[i] == NULL)
             {
@@ -143,7 +146,8 @@ bool image_info(image *imagen)
 #endif
     if (imagen == NULL)
         return false;
-    PGMImage *pgm = malloc(sizeof(PGMImage));
+    PGMImage *pgm;
+    debug_malloc( PGMImage, pgm, sizeof(PGMImage));
 
     if (imagen->full_name == NULL) create_full_name(imagen);
     printf("Name file : %s\n", imagen->full_name);
@@ -168,12 +172,13 @@ bool init_data_image(image *imagen)
 #endif
     if (imagen == NULL)
         return false;
-    //puts("a");
+
     // reservando columnas:
-    imagen->data = (RGB **)calloc(imagen->size_image.height, sizeof(RGB *));
-    for (max_size_img_length i = 0; i <= imagen->size_image.height; i++){
+    debug_malloc( RGB *, imagen->data, (imagen->size_image.height)*sizeof(RGB *));
+    for (max_size_img_length i = 0; i < imagen->size_image.height-1; i++){
         // reservando filas:
-        imagen->data[i] = (RGB *)calloc(imagen->size_image.width, sizeof(RGB));
+        debug_malloc( RGB, imagen->data[i], imagen->size_image.width*sizeof(RGB));
+        
     }
     return true;
 }
@@ -195,7 +200,7 @@ bool free_data_image(image *imagen)
         return false;
     if (imagen->data == NULL)
         return false;
-    for (max_size_img_length i = 0; i <= imagen->size_image.width; i++)
+    for (max_size_img_length i = 0; i < imagen->size_image.width-1; i++)
         // liberando filas:
         if (imagen->data[i] != NULL)
             free(imagen->data[i]);
@@ -227,8 +232,8 @@ bool create_imagen_backfill(image *imagen, RGB pixel_backfill)
         return false;
     if (imagen->data == NULL)
         init_data_image(imagen);
-    for (max_size_img_length i = 0; i <= imagen->size_image.height; i++)
-        for (max_size_img_length j = 0; j <= imagen->size_image.width; j++)
+    for (max_size_img_length i = 0; i < imagen->size_image.height-1; i++)
+        for (max_size_img_length j = 0; j <= imagen->size_image.width-1; j++)
             imagen->data[i][j] = pixel_backfill;
     return true;
 }
@@ -250,8 +255,8 @@ bool create_imagen_backfill_random(image *imagen)
         return false;
     if (imagen->data == NULL)
         init_data_image(imagen);
-    for (max_size_img_length i = 0; i <= imagen->size_image.height; i++)
-        for (max_size_img_length j = 0; j <= imagen->size_image.width; j++)
+    for (max_size_img_length i = 0; i < imagen->size_image.height-1; i++)
+        for (max_size_img_length j = 0; j <= imagen->size_image.width-1; j++)
             imagen->data[i][j] = generate_pixel_rand();
     return true;
 }
@@ -386,28 +391,28 @@ bool write_pixel_x_y(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE, max
     return true;
 }
 
-void assign_extension(image imagen)
+void assign_extension(image *imagen)
 {
 #ifdef DEBUG_ENABLE
     DEBUG_PRINT(DEBUG_LEVEL_INFO,
                 INIT_TYPE_FUNC_DBG(void, assign_extension)
-                    TYPE_DATA_DBG(image, "imagen = %p")
+                    TYPE_DATA_DBG(image*, "imagen = %p")
                         END_TYPE_FUNC_DBG,
                 imagen);
 #endif
-    switch (imagen.format)
+    switch (imagen->format)
     {
     case P1:
     case P4:
-        imagen.extension = pbm;
+        imagen->extension = pbm;
         break;
     case P2:
     case P5:
-        imagen.extension = pgm;
+        imagen->extension = pgm;
         break;
     case P3:
     case P6:
-        imagen.extension = ppm;
+        imagen->extension = ppm;
         break;
     default:
         break;
@@ -471,11 +476,10 @@ bool create_full_name(image *imagen){
                         END_TYPE_FUNC_DBG,
                 imagen);
 #endif
-
-    imagen->full_name = (char *)malloc(
-        sizeof(char) * strlen(imagen->name) +
+    if (imagen->full_name != NULL) free(imagen->full_name);
+    debug_malloc( char, imagen->full_name, sizeof(char) * strlen(imagen->name) +
         sizeof(char) * strlen(extensions_formats[imagen->extension]) +
-        1);
+    1);
     sprintf(imagen->full_name, "%s%s", imagen->name, extensions_formats[imagen->extension]);
     printf("Se a encontrado la extension correcta que solicito: %s\n", imagen->full_name);
 
@@ -493,12 +497,13 @@ bool write_image(image *imagen)
 #endif
 
     bool status = true;
-
+    assign_extension(imagen);
     if (imagen->full_name == NULL) 
         status = create_full_name(imagen); // si falla se retorna como error la funcion write_image
         if (!status) goto ret_write_image;
-
+    
     FILE *pgmimg = fopen(imagen->full_name, "wb");
+    if (pgmimg == NULL) return false;
 
     uint64_t longitud = snprintf(NULL, 0,
                                  "%s\n"        // formato
@@ -507,7 +512,8 @@ bool write_image(image *imagen)
                                  PX_formats[imagen->format],
                                  imagen->size_image.width, imagen->size_image.height,
                                  imagen->number_colors);      // obtener tamaño a reservar
-    char *data = (char *)malloc(sizeof(char) * longitud + 1); // reservar tamaño
+    char *data; 
+    debug_malloc( char, data, sizeof(char) * longitud + 1);// reservar tamaño
     sprintf(data,
             "%s\n"        // formato
             "%llu %llu\n" // tamaño de la imagen
@@ -516,28 +522,32 @@ bool write_image(image *imagen)
             imagen->size_image.width, imagen->size_image.height,
             imagen->number_colors); // escribir datos en la memoria nueva
     fprintf(pgmimg, data);          // escribir datos en el archivo
-    free(data);                     // liberar datos
+    free(data);
 
-    RGB example = (RGB){.r = 0, .g = 0, .b = 0};
-    longitud = snprintf(NULL, 0,
-                        "%u %u %u ",
-                        example.r, example.g, example.b);
-    data = (char *)malloc(sizeof(char) * longitud + 1); // reservar tamaño
-
-    for (max_size_img_length i = 0; i <= imagen->size_image.width-1; i++)
+    
+    
+    for (max_size_img_length i = 0; i < imagen->size_image.width-1; i++)
     {
-        for (max_size_img_length j = 0; j < imagen->size_image.height; j++)
+        for (max_size_img_length j = 0; j < imagen->size_image.height-1; j++)
         {
+            longitud = snprintf(NULL, 0,
+                        "%u %u %u ",
+                        imagen->data[i][j].r, imagen->data[i][j].g, imagen->data[i][j].b);
+            debug_malloc( char, data, sizeof(char) * longitud + 1);
+            
             sprintf(data, "%u %u %u ",
                     imagen->data[i][j].r,
                     imagen->data[i][j].g,
                     imagen->data[i][j].b);
             fprintf(pgmimg, "%s", data);
+            
+            free(data);
         }
         fprintf(pgmimg, "\n");
     }
     fclose(pgmimg);
     pgmimg = NULL;
+    
 
     ret_write_image:
     return status;

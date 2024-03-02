@@ -104,7 +104,7 @@ bool write_pixel_RGB(image *imagen, RGB pixel);
 bool write_pixel_RGB_x_y(image *imagen, RGB pixel, max_size_img_length x, max_size_img_length y);
 bool write_pixel(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE);
 bool write_pixel_x_y(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE, max_size_img_length x, max_size_img_length y);
-void assign_extension(image imagen);
+void assign_extension(image *imagen);
 bool is_pbm(image *imagen);
 bool is_pgm(image *imagen);
 bool is_ppm(image *imagen);
