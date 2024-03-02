@@ -1,51 +1,115 @@
 # image:
-esta cabezera permite la creacion de imagenes del tipo .pbm, .pgm y .ppm<br>
-<br>
-# Uso(ejemplo):<br>
-git clone https://github.com/desmonHak/image.git<br>
-gcc -Wall exec.c -o exec.bin<br>
-./exec.bin<br>
-<br>
-# Uso en codigo:<br>
 
-#include "image.h"<br>
+---
 
-int main(){<br>
+Esta cabezera permite la creacion de imagenes del tipo .pbm, .pgm y .ppm
 
-    image.format = format_ASCII.P2;
-    image.size_image[0] = 3;
-    image.size_image[1] = 3;
-    image.number_colors = "16";
-    image.name = "ejemplo";
+## Compilacion:
+
+git clone https://github.com/desmonHak/image.git
+gcc -Wall exec.c -o exec.bin
+./exec.bin
+
+## Uso en codigo:
+
+```c
+#include "image.h"
+
+int main()
+{
+    char name[] = "output"; // nombre de la imagen de salida
+    image imagen = (image){ 
+        .format = P1,       // formato
+        .size_image = { .height = 10, .width = 10 }, // tamaño de la imagen
+        .number_colors = MAX_NUMBER_COLORS_P3_P6, // numero de colores
+        .name = name // nombre de la imagen
+    };
+
+    create_imagen_backfill(&imagen,(RGB){.blue = 0, .gren = 0, .red = 0}); // crear una imagen completa de blanco
+    create_imagen_backfill_random(&imagen); // modiciar la imagen a colores aleatorios
     
-    for(int i = 0; i <= image.size_image[0]*image.size_image[1]; i++){
-        write_buffer(i, i, 0);
-    }
+    write_image(&imagen); // escribir la imagen
+    image_info(&imagen);  // obbtener informacion de la imagen escritra
+    free_data_image(&imagen); // liberar la imagen
+    puts("Programa finalizado.\n");
+}
 
-    write_image();
-    image_info(image.name);
+```
 
-}<br>
-<br>
+---
 
-primero importamos la cabezera. Ya hay una declaracion de la estructura _image llamada como image la variable, mediante esta estructura configuramos los parametros de la imagen.<br>
-imagen.format, esta variable se usa para indicar en la imagen el formato que se usa y la extension que usar para el archivo, si no se asigna por default se usara la extension .ppm.<br>
-Lista de los formatos y estructuras:<br>
- ![Alt text](https://github.com/desmonHak/image/blob/main/68747470733a2f2f6d656469612e6765656b73666f726765656b732e6f72672f77702d636f6e74656e742f75706c6f6164732f6e657470626d2e706e67?raw=true) <br>
-Los formatos en ASCII son P1, P2 y P3, P1 para colores en blanco y negro mediante 1 y 0 en la funcion de write_buffer. P2 permite usar la escala monocromatica de colores negros, grises y blancos. P3 permite el uso de pixeles de colores en RGB.<br>
-<br>
- image.size_image, este es un array de monodimensional que permite indicar el tamano en pixeles de la imagen, el primer parametro de la imagen perteneze a la cordenada X y el seguno a la cordenada Y, por tanto si se ingresa que el array es [3, 3] = 3 * 3 = 9 pixeles.<br>
-<br>
-image.number_colors, esta variables permite decir a la imagen el tamano de la paleta de colores que se usara, en el modo P1 y P4 se a de usar 2 para el 1 y 0 que son la posibilidades que se presenyta. En el caso de P2 y P3 se recomienda usar 255 lo cual da de resulta una paleta de colores de 255*255*255 lo cual equivale a una cantidad de 16 581 375 de colores distintos.<br>
-<br>
-image.name, este parametro permite indicar a la cabezera como se llamara la imagen a la hora de crearla.<br>
-<br>
-write_buffer, este funcion de retorno de tipo void permite crear un pixel tomando como primer argumento la cantidad de rojo. como segundo parametro la cantidad de verde. y como tercer parametro la cantidad de azul que contendra el pixel. Tras el uso de esta funcion la variable image.name es redefinida con el nombre del archio que se le asigno mas la extension que se le asigno.<br>
-prototipo de la funcion:              void write_buffer(uint8_t RED, uint8_t GREN, uint8_t BLUE);<br>
-<br>
-write_image esta funcion de retorno void es usada para la escritura de la imagen final, tras la asignacion de datos con la funcion write_buffer. write_image usa los datos del buffer para plasmarlo en imagen. lo cual creara de salida la imagen con el nombre asignado en image.name con una de las extensiones dependiendo del tipo de formato que escogio. Como argumento recibe el nombre de la imagen, como hemos mencionado podemos usar la variable redefinda image.name la cual contiene despues de haber aplicado la funcion write_buffer el nombre real con la extension.<br>
-<br>
-image_info, esta funcion devuelve informacion basica de la imagen generada, prototipo:       void image_info(const char *file);<br>
-<br>
-# Ejemplo de ejecucion:<br>
- ![Alt text](https://raw.githubusercontent.com/desmonHak/image/main/Screenshot%20from%202021-05-01%2003-00-38.png)<br>
+Lista de los formatos, estructuras y cantidad de colores disponibles:
+![Alt text](img/file.jpg)
+
+### Estructura `image`
+
+```c
+image imagen = (image){
+    .format = P1,
+    .size_image = { .height = 10, .width = 10 },
+    .number_colors = MAX_NUMBER_COLORS_P3_P6,
+    .name = name
+}
+```
+
+- `format`: El miembro define el formato a usar. El sufijo `_A` para `ASCII` y el `_B` para `binario` posibles valoes:
+
+| Formatos en ASCII | Formatos en binario | rangos                     |
+| :---------------: | :-----------------: | :------------------------- |
+|     `P1/P1_A`     |      `P4/P4_B`      | 0 - 1 (blanco y negro)     |
+|     `P2/P2_A`     |      `P5/P5_B`      | 0 - 255 (escala de grises) |
+|     `P3/P3_A`     |      `P6/P6_B`      | 0 - 255 (escala RGB)       |
+
+- `size_image`: define el tamaño de la imagen, siendo `height` la altura y `width` la anchura.
+- `number_colors`: se usa para definir el numero de rango de la tablas anteriores, no a de ser necesariamente el rango completo definido anteriormente, pero no puede exceder el maximos. Posibles valores:
+
+  |      Valores maximos      | rangos                     |
+  | :-----------------------: | :------------------------- |
+  | `MAX_NUMBER_COLORS_P1_P4` | 0 - 1 (blanco y negro)     |
+  | `MAX_NUMBER_COLORS_P2_P5` | 0 - 255 (escala de grises) |
+  | `MAX_NUMBER_COLORS_P3_P6` | 0 - 255 (escala RGB)       |
+
+- `name`: define el nombre del archivo de salida
+
+Estructura completa
+```c
+typedef struct image
+{
+    formats  format;     // formato de la imagen
+    extension extension; // extension de la extension usada
+    char *name;          // nombre de la imagen
+    char *full_name;     // nombre de la imagen completo con extension, es asignada tras llamar a assign_extension()
+
+    struct contador{
+        max_size_img_length contador_x;  // x
+        max_size_img_length contador_y;  // y
+    } contador;
+
+    RGB **data; // datos de la imagen = matriz x * y
+
+    struct size_image{
+        max_size_img_length width;  // x
+        max_size_img_length height; // y
+    } size_image; // size total = width * height == x * y
+
+    #if   MAX_NUMBER_COLORS == 0xff
+        uint8_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffff
+        uint16_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffffffff
+        uint32_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffffffffffffffff
+        uint64_t number_colors;
+    #else 
+        #error "MAX_NUMBER_COLORS must be 0xff, 0xffff, 0xffffffff or 0xffffffffffffffff"
+    #endif
+} image;
+```
+
+---
+
+# Ejemplo de ejecucion:
+
+![Alt text](img/Screenshot%20from%202021-05-01%2003-00-38.png)
+
+---

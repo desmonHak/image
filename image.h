@@ -1,5 +1,5 @@
-#if !defined(__IMAGE__)
-#define _tamano 
+#ifndef __IMAGE_H__
+#define __IMAGE_H__
 
 #include <stdio.h>
 #include <ctype.h>
@@ -8,50 +8,80 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <time.h>
 
-#define _P1 "P1"
-#define _P4 "P4"
-#define _P2 "P2"
-#define _P5 "P5"
-#define _P3 "P3"
-#define _P6 "P6"
+#include "debug_c.h"
 
-uint32_t contador;
+#define MAX_NUMBER_COLORS_P1_P4 1
+#define MAX_NUMBER_COLORS_P2_P5 0xff
+#define MAX_NUMBER_COLORS_P3_P6 0xff
+#define MAX_NUMBER_COLORS MAX_NUMBER_COLORS_P3_P6
 
-typedef struct RGB
+#define CALC_SIZE_IMG(imagen) imagen.size_image.height * imagen.size_image.width
+
+typedef uint64_t max_size_img_length;
+
+
+
+typedef enum formats {
+    P1, P2, P3,
+    P4, P5, P6
+} formats;
+typedef enum format_ASCII  { P1_A, P2_A, P3_A }      format_ASCII;
+typedef enum format_BINARY { P4_B = P4, P5_B, P6_B } format_BINARY;
+
+static const char PX_formats[6][3] = {
+    "P1", "P2", "P3",
+    "P4", "P5", "P6",
+};
+
+
+typedef enum extension {
+    pbm, pgm, ppm
+} extension;
+static const char extensions_formats[3][5] = {
+    ".pbm", ".pgm", ".ppm"
+};
+
+typedef union RGB
 {
-
-    const uint8_t red;
-    const uint8_t gren;
-    const uint8_t blue;
-
+    struct { uint8_t red; uint8_t gren; uint8_t blue; };
+    struct { uint8_t r;   uint8_t g;   uint8_t b;     };    
 } RGB;
 
-typedef struct _image
+typedef struct image
 {
-    char *format;
-    char *name;
-    uint32_t size_image[2];
-    char* number_colors;
-    RGB *data[9999*9999];
-} _image;
+    formats  format;     // formato de la imagen
+    extension extension; // extension de la extension usada
+    char *name;          // nombre de la imagen
+    char *full_name;
 
-typedef struct _format_ASCII
-{
-    const char *P1;
-    const char *P2;
-    const char *P3;
-} _format_ASCII;
-typedef struct _format_BINARY
-{
-    const char *P4;
-    const char *P5;
-    const char *P6;
-} _format_BINARY;
+    struct contador{
+        max_size_img_length contador_x;  // x
+        max_size_img_length contador_y;  // y
+    } contador;
 
-const _format_ASCII format_ASCII = {_P1, _P2, _P3};
-const _format_BINARY format_BINARY = {_P4, _P5, _P6};
-_image image;
+    RGB **data; // datos de la imagen = matriz x * y
+
+    struct size_image{
+        max_size_img_length width;  // x
+        max_size_img_length height; // y
+    } size_image; // size total = width * height == x * y
+
+    #if   MAX_NUMBER_COLORS == 0xff
+        uint8_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffff
+        uint16_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffffffff
+        uint32_t number_colors;
+    #elif MAX_NUMBER_COLORS == 0xffffffffffffffff
+        uint64_t number_colors;
+    #else 
+        #error "MAX_NUMBER_COLORS must be 0xff, 0xffff, 0xffffffff or 0xffffffffffffffff"
+    #endif
+} image;
+
+
 typedef struct PGMImage
 {
     char pgmType[3];
@@ -61,181 +91,26 @@ typedef struct PGMImage
     unsigned int maxValue;
 } PGMImage;
 
-void ignoreComments(FILE *fp)
-{
-    int ch;
-    char line[100];
+static RGB generate_pixel_rand(void);
+void ignoreComments(FILE *fp);
+bool openPGM(PGMImage *pgm, const char *filename);
+void printImageDetails(PGMImage *pgm, const char *filename);
+bool image_info(image *imagen);
+bool init_data_image(image *imagen);
+bool free_data_image(image *imagen);
+bool create_imagen_backfill(image *imagen, RGB pixel_backfill);
+bool create_imagen_backfill_random(image *imagen);
+bool write_pixel_RGB(image *imagen, RGB pixel);
+bool write_pixel_RGB_x_y(image *imagen, RGB pixel, max_size_img_length x, max_size_img_length y);
+bool write_pixel(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE);
+bool write_pixel_x_y(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE, max_size_img_length x, max_size_img_length y);
+void assign_extension(image imagen);
+bool is_pbm(image *imagen);
+bool is_pgm(image *imagen);
+bool is_ppm(image *imagen);
+bool create_full_name(image *imagen);
+bool write_image(image *imagen);
 
-    while ((ch = fgetc(fp)) != EOF && isspace(ch))
-        ;
 
-    if (ch == '#')
-    {
-        fgets(line, sizeof(line), fp);
-        ignoreComments(fp);
-    }
-    else
-        fseek(fp, -1, SEEK_CUR);
-}
-
-bool openPGM(PGMImage *pgm, const char *filename)
-{
-    FILE *pgmfile = fopen(filename, "rb");
-    if (pgmfile == NULL)
-    {
-        printf("File does not exist\n");
-        return false;
-    }
-
-    ignoreComments(pgmfile);
-    fscanf(pgmfile, "%s", pgm->pgmType);
-
-    ignoreComments(pgmfile);
-
-    fscanf(pgmfile, "%d %d", &(pgm->width), &(pgm->height));
-
-    ignoreComments(pgmfile);
-
-    fscanf(pgmfile, "%d", &(pgm->maxValue));
-    ignoreComments(pgmfile);
-
-    pgm->data = malloc(pgm->height * sizeof(unsigned char *));
-
-    if (pgm->pgmType[1] == '5')
-    {
-
-        fgetc(pgmfile);
-
-        for (int i = 0;
-             i < pgm->height; i++)
-        {
-            pgm->data[i] = malloc(pgm->width * sizeof(unsigned char));
-
-            if (pgm->data[i] == NULL)
-            {
-                fprintf(stderr, "malloc failed\n");
-                exit(1);
-            }
-
-            fread(pgm->data[i], sizeof(unsigned char), pgm->width, pgmfile);
-        }
-    }
-
-    fclose(pgmfile);
-
-    return true;
-}
-
-void printImageDetails(PGMImage *pgm, const char *filename)
-{
-    FILE *pgmfile = fopen(filename, "rb");
-
-    char *ext = strrchr(filename, '.');
-
-    if (!ext)
-        printf("No extension found in file %s", filename);
-    else
-        printf("File format: %s\n", ext + 1);
-    printf("PGM File type  : %s\n", pgm->pgmType);
-
-    if (!strcmp(pgm->pgmType, "P2"))
-        printf("PGM File Format: ASCII\n");
-    else if (!strcmp(pgm->pgmType, "P5"))
-        printf("PGM File Format: Binary\n");
-    printf("Width of img   : %d px\n", pgm->width);
-    printf("Height of img  : %d px\n", pgm->height);
-    printf("Max Gray value : %d\n", pgm->maxValue);
-
-    fclose(pgmfile);
-}
-
-void image_info(const char *file)
-{
-    PGMImage *pgm = malloc(sizeof(PGMImage));
-    printf("ip file : %s\n", file);
-    if (openPGM(pgm, file))
-        printImageDetails(pgm, file);
-}
-
-void write_buffer(uint8_t RED, uint8_t GREN, uint8_t BLUE)
-{
-    image.data[contador] = RED;
-    contador++;
-    image.data[contador] = GREN;
-    contador++;
-    image.data[contador] = BLUE;
-    contador++;
-}
-
-const char *concatenacion(const char *texto1, const char *texto2)
-{
-    char *FinallyText = malloc((strlen(texto1) + strlen(texto2) + 1) * sizeof(char));
-    for (register int i = 0; i <= strlen(texto1); i++)
-    {
-        FinallyText[i] = (char)texto1[i];
-    }
-    for (register int i = strlen(texto1); i <= strlen(texto1) + strlen(texto2); i++)
-    {
-        FinallyText[i] = texto2[i - strlen(texto1)];
-    }
-
-    return FinallyText;
-}
-
-void write_buffer_cordenadas(uint32_t x, uint32_t y, uint8_t RED, uint8_t GREN, uint8_t BLUE){
-
-    int cordenada_general =  ((y * image.size_image[1]) + x) * 3;
-    image.data[cordenada_general] = RED;
-    image.data[cordenada_general+1] = GREN;    
-    image.data[cordenada_general+2] = BLUE;
-}
-
-void write_image()
-{
-    if (image.format == _P1 || image.format == _P4)
-    {
-        image.name = concatenacion(image.name, ".pbm");
-    }
-    else if (image.format == _P2 || image.format == _P5)
-    {
-        image.name = concatenacion(image.name, ".ppm");
-    }
-    else if (image.format == _P3 || image.format == _P6)
-    {
-        image.name = concatenacion(image.name, ".ppm");
-    }
-    else
-    {
-        image.name = concatenacion(image.name, ".ppm");
-    }
-    printf("Se a encontrado la extension correcta que solicito: %s\n", image.name);
-
-    FILE *pgmimg = fopen(image.name, "wb");
-
-    fprintf(pgmimg, concatenacion(concatenacion("", image.format), "\n"));
-    char str[5];
-    sprintf(str, "%d", image.size_image[0]);
-    char _str[5];
-    sprintf(_str, "%d", image.size_image[1]);
-
-    fprintf(pgmimg, concatenacion(concatenacion(concatenacion(concatenacion("", str), " "), _str), "\n"));
-    fprintf(pgmimg, concatenacion(concatenacion(" ", image.number_colors), "\n"));
-    uint8_t c = 0;
-    for (int i = 0; i <= (image.size_image[0] * image.size_image[1] * 3-1); i++)
-    {
-        if (c == 3)
-        {
-            fprintf(pgmimg, " ");
-            c = 0;
-        }
-        char __str[3];
-        sprintf(__str, "%d", image.data[i]);
-        fprintf(pgmimg, concatenacion(" ", __str));
-        c++;
-    }
-    fprintf(pgmimg, "\n");
-    fclose(pgmimg); //*/
-    pgmimg = NULL;
-}
-
+#include "image.c"
 #endif

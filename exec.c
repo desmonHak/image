@@ -1,34 +1,22 @@
-#include "image.h"
-#include <time.h>
 
+#include "image.h"
 
 int main()
 {
 
+    char name[] = "output";
+    image imagen = (image){
+        .format = P1,
+        .size_image = { .height = 10, .width = 10 },
+        .number_colors = MAX_NUMBER_COLORS_P3_P6,
+        .name = name
+    };
 
-    image.format = format_ASCII.P3;
-
-    image.size_image[0] = 1024;
-    image.size_image[1] = 576;
-
-    image.number_colors = "255";
-
-    image.name = "output";
-
-
-    srand(time(NULL));
-    unsigned char a, b, c;
-    for(uint64_t i = 0; i <= image.size_image[0]*image.size_image[1]; i++){
-        a = rand();
-        b = rand();
-        c = rand();
-    	write_buffer(a%255-1, b%255-1,c%255-1);
-    }
-
-    //write_buffer(255, 0, 0);
-    write_image();
-    image_info(image.name);
+    create_imagen_backfill(&imagen,(RGB){.blue = 0, .gren = 0, .red = 0});
+    create_imagen_backfill_random(&imagen);
+    
+    write_image(&imagen);
+    image_info(&imagen);
+    free_data_image(&imagen);
     puts("Programa finalizado.\n");
-
-
 }
