@@ -110,6 +110,8 @@ bool is_pgm(image *imagen);
 bool is_ppm(image *imagen);
 bool create_full_name(image *imagen);
 bool write_image(image *imagen);
+void __attribute__((constructor)) __init_dfafad__();
+void __attribute__((destructor)) __end_dfafad__();
 
 
 #include "image.c"

@@ -4,6 +4,15 @@
 
 #define DEBUG_ENABLE
 
+void __attribute__((constructor)) __init_dfafad__()
+{
+    srand(time(NULL));
+}
+void __attribute__((destructor)) __end_dfafad__()
+{
+
+}
+
 static RGB generate_pixel_rand(void)
 {
 #ifdef DEBUG_ENABLE
@@ -11,7 +20,7 @@ static RGB generate_pixel_rand(void)
                 INIT_TYPE_FUNC_DBG(RGB, generate_pixel_rand)
                         END_TYPE_FUNC_DBG);
 #endif
-    srand(time(NULL));
+    
     return (RGB){.r = rand(), .g = rand(), .b = rand()};
 }
 
@@ -159,6 +168,7 @@ bool init_data_image(image *imagen)
 #endif
     if (imagen == NULL)
         return false;
+    //puts("a");
     // reservando columnas:
     imagen->data = (RGB **)calloc(imagen->size_image.height, sizeof(RGB *));
     for (max_size_img_length i = 0; i <= imagen->size_image.height; i++){
@@ -189,9 +199,12 @@ bool free_data_image(image *imagen)
         // liberando filas:
         if (imagen->data[i] != NULL)
             free(imagen->data[i]);
-
     // liberando columnas:
     free(imagen->data);
+    imagen->data = NULL;
+
+    if (imagen->full_name != NULL) free(imagen->full_name);
+    imagen->full_name = NULL;
     return true;
 }
 
@@ -261,17 +274,19 @@ bool write_pixel_RGB(image *imagen, RGB pixel)
 #endif
     if (imagen == NULL)
         return false;
-    if (imagen->size_image.width < imagen->contador.contador_x)
+
+    imagen->data[imagen->contador.contador_x][imagen->contador.contador_y] = pixel;
+    if (imagen->size_image.width-1 < imagen->contador.contador_x)
     {
         // subir una columna si la fila ya fue llenada de pixeles
         imagen->contador.contador_y++;
         imagen->contador.contador_x = 0;
-    }
+    } else imagen->contador.contador_x++;
     // error se esta intentando escribir mas datos de los especificados
-    if (imagen->size_image.height < imagen->contador.contador_y)
+    if (imagen->size_image.height-1 < imagen->contador.contador_y)
         return false;
 
-    imagen->data[imagen->contador.contador_x][imagen->contador.contador_y] = pixel;
+    
     return true;
 }
 
@@ -295,9 +310,9 @@ bool write_pixel_RGB_x_y(image *imagen, RGB pixel, max_size_img_length x, max_si
 #endif
     if (imagen == NULL)
         return false;
-    if (imagen->size_image.width < x)
+    if (imagen->size_image.width-1 < x)
         return false; // la cordenada x supera el size establecido
-    if (imagen->size_image.height < y)
+    if (imagen->size_image.height-1 < y)
         return false; // la cordenada y supera el size establecido
     imagen->data[x][y] = pixel;
     return true;
@@ -323,14 +338,14 @@ bool write_pixel(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE)
 #endif
     if (imagen == NULL)
         return false;
-    if (imagen->size_image.width < imagen->contador.contador_x)
+    if (imagen->size_image.width-1 < imagen->contador.contador_x)
     {
         // subir una columna si la fila ya fue llenada de pixeles
         imagen->contador.contador_y++;
         imagen->contador.contador_x = 0;
     }
     // error se esta intentando escribir mas datos de los especificados
-    if (imagen->size_image.height < imagen->contador.contador_y)
+    if (imagen->size_image.height-1 < imagen->contador.contador_y)
         return false;
 
     imagen->data[imagen->contador.contador_x][imagen->contador.contador_y] = (RGB){
@@ -360,9 +375,9 @@ bool write_pixel_x_y(image *imagen, uint8_t RED, uint8_t GREN, uint8_t BLUE, max
 #endif
     if (imagen == NULL)
         return false;
-    if (imagen->size_image.width < x)
+    if (imagen->size_image.width-1 < x)
         return false; // la cordenada x supera el size establecido
-    if (imagen->size_image.height < y)
+    if (imagen->size_image.height-1 < y)
         return false; // la cordenada y supera el size establecido
     if (imagen == NULL)
         return false;
@@ -509,9 +524,9 @@ bool write_image(image *imagen)
                         example.r, example.g, example.b);
     data = (char *)malloc(sizeof(char) * longitud + 1); // reservar tamaño
 
-    for (max_size_img_length i = 0; i <= imagen->size_image.width; i++)
+    for (max_size_img_length i = 0; i <= imagen->size_image.width-1; i++)
     {
-        for (max_size_img_length j = 0; j <= imagen->size_image.height; j++)
+        for (max_size_img_length j = 0; j < imagen->size_image.height; j++)
         {
             sprintf(data, "%u %u %u ",
                     imagen->data[i][j].r,

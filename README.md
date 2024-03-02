@@ -21,7 +21,7 @@ int main()
     image imagen = (image){ 
         .format = P1,       // formato
         .size_image = { .height = 10, .width = 10 }, // tamaño de la imagen
-        .number_colors = MAX_NUMBER_COLORS_P3_P6, // numero de colores
+        .number_colors = MAX_NUMBER_COLORS_P1_P4, // numero de colores
         .name = name // nombre de la imagen
     };
 
